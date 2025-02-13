@@ -1,16 +1,17 @@
-import { useDispatch } from "react-redux";
+
 import SockJS from "sockjs-client";
 import Stomp from "stompjs";
 import {
   selectWebsocket,
   setConnectionStatus,
   setWebSocketClient,
+  
 } from "@/stores/slices/webSocketSlice";
-import { useAppSelector } from "@/stores/hook";
-import { addMessageToRoom } from "@/stores/slices/roomSlice";
+import { useAppSelector, useAppDispatch } from "@/stores/hook";
+import { addMessageToRoom,setUserCount, } from "@/stores/slices/roomSlice";
 
 export const useWebSocket = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const { client, isConnected } = useAppSelector(selectWebsocket);
   const serverUrl = process.env.API_BASE_URL;
 
@@ -67,6 +68,7 @@ export const useWebSocket = () => {
 
   const onConnected = (stompClient: Stomp.Client) => {
     stompClient.subscribe(`/topic/messages`, onUpdateRoom);
+    stompClient.subscribe(`/topic/userCount`, onUserCountUpdate);
     dispatch(setWebSocketClient(stompClient));
     dispatch(setConnectionStatus(true));
     console.log("WebSocket connected successfully"); 
@@ -77,7 +79,13 @@ export const useWebSocket = () => {
     dispatch(addMessageToRoom(newMessageObject));
     console.log("Receive new message object", newMessageObject);
   };
-
+  
+  const onUserCountUpdate = (payload: Stomp.Message) => {
+    const UserCT = parseInt(payload.body);
+    dispatch(setUserCount(UserCT));
+    console.log("Receive new user count", UserCT);
+  };
+  
   return {
     connect,
     disconnect,

@@ -6,6 +6,9 @@ import { useWebSocket } from "@/hooks/useWebsocket";
 import { setUser } from "@/stores/slices/userSlice";
 import { MessageType } from "@/types/message_type";
 import { useRouter } from "next/navigation";
+import { selectRoom } from "@/stores/slices/roomSlice";
+import { useAppSelector } from "@/stores/hook";
+import { selectWebsocket } from "@/stores/slices/webSocketSlice";
 
 const JoinPage: React.FC = () => {
   const router = useRouter();
@@ -14,6 +17,9 @@ const JoinPage: React.FC = () => {
   const [userSubscription, setUserSubscription] = useState<Stomp.Subscription>();
   const [username, setUsername] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const room = useAppSelector(selectRoom);
+  const userCT = room?.userCT || 0;
+  const { isConnected } = useAppSelector(selectWebsocket);
 
   const onUserConnected = (payload: Stomp.Message) =>  {
     const userObject = JSON.parse(payload.body);
@@ -21,6 +27,12 @@ const JoinPage: React.FC = () => {
     dispatch(setUser(userObject));
     router.push("/chatroom");
   };
+  
+  useEffect(() => {
+    if (isConnected) {
+      sendMessage("/chat/getUserCount", {}); 
+    }
+  }, [isConnected]); //ทำงานตอนเชื่อมต่อแล้วถูกอัพเดต
 
   useEffect(() => {
     setUserSubscription(userSubscription);
@@ -58,7 +70,7 @@ const JoinPage: React.FC = () => {
           Welcome Back
         </h2>
         <h6 className="text-xl text-center text-gray-500 mb-6">
-          Current user:  <span className="font-semibold">{/*fill current user number*/}</span>
+          Current user:  <span className="font-semibold">{userCT}</span>
         </h6>
         <p className="text-center text-gray-500 mb-6">
           Please enter your username to continue

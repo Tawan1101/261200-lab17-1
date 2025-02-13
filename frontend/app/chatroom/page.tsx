@@ -15,6 +15,7 @@ const ChatRoom: React.FC = () => {
   const [newMessage, setNewMessage] = useState<string>("");
   const user = useAppSelector(selectUser);
   const room = useAppSelector(selectRoom);
+  const userCT = room?.userCT || 0;
   const messages = room?.messages || [];
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -50,7 +51,7 @@ const ChatRoom: React.FC = () => {
               Chat Room
             </h2>
             <div className="text-xl font-medium text-gray-700">
-              Current user: <span className="text-teal-500 font-semibold">{/*add number of user*/}</span>
+              Current user: <span className="text-teal-500 font-semibold">{userCT}</span>
             </div>
           </div>
 

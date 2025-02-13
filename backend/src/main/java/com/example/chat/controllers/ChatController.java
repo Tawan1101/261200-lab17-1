@@ -5,6 +5,7 @@ import com.example.chat.dtos.CreateChatMessageBody;
 import com.example.chat.models.ChatMessage;
 import com.example.chat.models.MessageType;
 import com.example.chat.models.User;
+import com.example.chat.services.UserCTServices;
 import lombok.AllArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Controller;
 @Controller
 @AllArgsConstructor
 public class ChatController {
-    private final SimpMessageSendingOperations messagingTemplate;
 
+    private final SimpMessageSendingOperations messagingTemplate;
 
     @MessageMapping("/chat/sendMessage")
     @SendTo("/topic/messages")
@@ -34,9 +35,17 @@ public class ChatController {
         String username = createChatMessageBody.getSender();
         String message = createChatMessageBody.getMessage();
         MessageType messageType = createChatMessageBody.getType();
+
+        UserCTServices.incrementUserCount();
+        messagingTemplate.convertAndSend("/topic/userCount", UserCTServices.getUserCount());
+
         headerAccessor.getSessionAttributes().put("username" , username);
         messagingTemplate.convertAndSend("/topic/messages" , ChatMessage.buildChatmessage(message,username,messageType));
-         return new User(username);
+        return new User(username);
     }
 
+    @MessageMapping("/chat/getUserCount")
+    public void getUserCount(){
+        messagingTemplate.convertAndSend("/topic/userCount", UserCTServices.getUserCount());
+    }
 }
